@@ -1,0 +1,86 @@
+{
+  "score": 0,
+  "timestamp": "2026-05-01T23:19:00.495581",
+  "findings": [
+    {
+      "id": "DF001",
+      "severity": "CRITICAL",
+      "title": "Kontejner se pokreće kao root korisnik",
+      "description": "Pokretanje kontejnera kao root je ozbiljan sigurnosni propust. Ako napadač kompromituje aplikaciju, automatski ima root pristup kontejneru, što olakšava container escape napade.",
+      "fix": "Dodaj 'USER appuser' na kraj Dockerfile-a (prethodno kreiraj korisnika s RUN adduser).",
+      "line": null
+    },
+    {
+      "id": "DF002",
+      "severity": "HIGH",
+      "title": "Koristi se 'latest' tag za base image",
+      "description": "Tag 'latest' nije fiksna verzija — mijenja se. Danas je sigurna slika, sutra može sadržavati ranjivosti. Nemoguće je reproducirati isti build.",
+      "fix": "Koristi specifičan tag, npr. FROM python:3.11.9-slim umjesto FROM python:latest",
+      "line": 5
+    },
+    {
+      "id": "DF003",
+      "severity": "CRITICAL",
+      "title": "Hardcoded lozinka ili API ključ u ENV",
+      "description": "Tajni podaci hardcoded u Dockerfile postaju dio Docker image sloja. Svako ko skine image može ih pročitati komandom 'docker history'.",
+      "fix": "Koristi Docker Secrets ili environment varijable koje se proslijeđuju pri pokretanju.",
+      "line": 8
+    },
+    {
+      "id": "DF004",
+      "severity": "MEDIUM",
+      "title": "Koristi se ADD umjesto COPY",
+      "description": "ADD instrukcija ima skrivene mogućnosti: automatski raspakuje arhive i može preuzimati fajlove s URL-ova. COPY je eksplicitniji i sigurniji.",
+      "fix": "Zamijeni ADD s COPY za kopiranje lokalnih fajlova.",
+      "line": 12
+    },
+    {
+      "id": "DF005",
+      "severity": "MEDIUM",
+      "title": "Nedostaje HEALTHCHECK instrukcija",
+      "description": "Bez HEALTHCHECK instrukcije, Docker ne zna je li aplikacija funkcionalna. Kontejner može biti 'running' ali aplikacija može biti crashala.",
+      "fix": "Dodaj HEALTHCHECK instrukciju, npr: HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health || exit 1",
+      "line": null
+    },
+    {
+      "id": "DF006",
+      "severity": "LOW",
+      "title": "apt-get bez --no-install-recommends",
+      "description": "Instaliranje paketa bez --no-install-recommends dovodi do instalacije nepotrebnih paketa koji povećavaju površinu napada.",
+      "fix": "Koristi: RUN apt-get install -y --no-install-recommends <paketi>",
+      "line": 17
+    },
+    {
+      "id": "DC001",
+      "severity": "CRITICAL",
+      "title": "Privileged mod je uključen",
+      "description": "privileged: true daje kontejneru gotovo isti pristup hostu kao root korisnik. Napadač može lako izvesti container escape napad.",
+      "fix": "Ukloni 'privileged: true'. Koristi 'cap_add' samo za specifične capabilities.",
+      "line": null
+    },
+    {
+      "id": "DC002",
+      "severity": "CRITICAL",
+      "title": "Docker socket je montiran u kontejner",
+      "description": "Montiranje /var/run/docker.sock daje kontejneru punu kontrolu nad Docker daemonom. Napadač može kreirati privilegovane kontejnere i preuzeti cijeli host.",
+      "fix": "Nikad ne montiraj Docker socket u produkcijske kontejnere.",
+      "line": null
+    },
+    {
+      "id": "DC004",
+      "severity": "MEDIUM",
+      "title": "Nedostaju resource limits (CPU/memorija)",
+      "description": "Bez resource limits, jedan kontejner može potrošiti sve resurse hosta i srušiti ostale servise.",
+      "fix": "Dodaj limits:\n  deploy:\n    resources:\n      limits:\n        cpus: '0.5'\n        memory: 512M",
+      "line": null
+    },
+    {
+      "id": "DC005",
+      "severity": "LOW",
+      "title": "Container restart policy nije definisan",
+      "description": "Bez restart policy, kontejner se ne pokreće automatski nakon pada sistema.",
+      "fix": "Dodaj 'restart: unless-stopped' za produkcijske servise.",
+      "line": null
+    }
+  ]
+}

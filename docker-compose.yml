@@ -1,0 +1,25 @@
+# ⚠️  OVO JE NAMJERNO RANJIVA KONFIGURACIJA - SAMO ZA TESTIRANJE!
+
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    # DC003 - Hardcoded lozinka!
+    environment:
+      - DB_PASSWORD=admin1234
+      - SECRET_KEY=moja_tajna_lozinka
+    # DC001 - Privileged mode!
+    privileged: true
+    volumes:
+      # DC002 - Docker socket montiran u kontejner!
+      - /var/run/docker.sock:/var/run/docker.sock
+    # DC004 - Nema resource limits!
+    # DC005 - Nema restart policy!
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=root123
