@@ -1,0 +1,32 @@
+name: ContainerGuard Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Preuzmi kod
+        uses: actions/checkout@v4
+
+      - name: Postavi Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Pokreni ContainerGuard skener
+        run: python3 scanner.py
+
+      - name: Sačuvaj HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: containerguard-report
+          path: |
+            containerguard_report.html
+            containerguard_report.json
