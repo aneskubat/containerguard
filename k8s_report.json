@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-05-02T09:45:15.360799",
+  "total_findings": 9,
+  "findings": [
+    {
+      "id": "K8S001",
+      "severity": "CRITICAL",
+      "title": "Container se pokreće kao root (runAsRoot)",
+      "description": "Pokretanje kontejnera kao root u Kubernetes okruženju je kritičan propust. U slučaju kompromitacije, napadač dobiva root pristup kontejneru što značajno olakšava container escape napade prema host sistemu.",
+      "fix": "Dodaj securityContext:\n  runAsNonRoot: true\n  runAsUser: 1000",
+      "line": null
+    },
+    {
+      "id": "K8S002",
+      "severity": "CRITICAL",
+      "title": "Privilegovani kontejner (privileged: true)",
+      "description": "Privilegovani kontejner ima pristup svim Linux capabilities i može direktno pristupati host uređajima. Ekvivalentno pokretanju procesa s root pravima direktno na hostu.",
+      "fix": "Ukloni 'privileged: true' iz securityContext.",
+      "line": null
+    },
+    {
+      "id": "K8S003",
+      "severity": "HIGH",
+      "title": "Nedostaju resource limits",
+      "description": "Bez definisanih CPU i memorijskih limita, jedan Pod može potrošiti sve resurse noda i srušiti ostale servise — resource exhaustion napad. Kubernetes scheduler također ne može optimalno rasporediti Podove.",
+      "fix": "Dodaj resources:\n  limits:\n    cpu: '500m'\n    memory: '512Mi'\n  requests:\n    cpu: '250m'\n    memory: '256Mi'",
+      "line": null
+    },
+    {
+      "id": "K8S004",
+      "severity": "HIGH",
+      "title": "Koristi se 'latest' tag za container image",
+      "description": "Tag 'latest' nije deterministički — svaki deployment može pokrenuti drugačiju verziju image-a. Ovo otežava audit, rollback i može uvesti ranjivosti bez znanja operatora.",
+      "fix": "Koristi specifičan tag, npr. nginx:1.25.3 umjesto nginx:latest",
+      "line": null
+    },
+    {
+      "id": "K8S005",
+      "severity": "HIGH",
+      "title": "allowPrivilegeEscalation nije onemogućen",
+      "description": "Bez 'allowPrivilegeEscalation: false', proces unutar kontejnera može steći više privilegija od roditeljskog procesa kroz setuid/setgid mehanizme, što olakšava privilege escalation napade.",
+      "fix": "Dodaj u securityContext:\n  allowPrivilegeEscalation: false",
+      "line": null
+    },
+    {
+      "id": "K8S006",
+      "severity": "MEDIUM",
+      "title": "Nedostaju liveness i readiness probe",
+      "description": "Bez health proba, Kubernetes ne može automatski detektovati i restartati nezdrave kontejnere. Aplikacija može biti u neispravnom stanju ali Kubernetes nastavlja slati saobraćaj na nju.",
+      "fix": "Dodaj livenessProbe i readinessProbe u container spec.",
+      "line": null
+    },
+    {
+      "id": "K8S007",
+      "severity": "MEDIUM",
+      "title": "Root filesystem nije read-only",
+      "description": "Bez readOnlyRootFilesystem: true, napadač koji kompromituje kontejner može pisati na filesystem — instalirati alate, modifikovati konfiguracije ili persistovati malware.",
+      "fix": "Dodaj u securityContext:\n  readOnlyRootFilesystem: true",
+      "line": null
+    },
+    {
+      "id": "K8S008",
+      "severity": "MEDIUM",
+      "title": "Hostnetwork ili hostPID je omogućen",
+      "description": "hostNetwork: true ili hostPID: true uklanjaju mrežnu/procesnu izolaciju između kontejnera i hosta. Napadač može vidjeti sve mrežne interfejse i procese na host sistemu.",
+      "fix": "Ukloni 'hostNetwork: true' i 'hostPID: true' iz Pod spec-a.",
+      "line": null
+    },
+    {
+      "id": "K8S010",
+      "severity": "CRITICAL",
+      "title": "Secrets u environment varijablama (plaintext)",
+      "description": "Definisanje tajnih podataka direktno u env varijablama Pod-a znači da su vidljivi svakome s pristupom kubectl describe. Kubernetes Secrets objekat pruža bolju kontrolu pristupa.",
+      "fix": "Koristi secretKeyRef umjesto direktnih vrijednosti:\n  env:\n    - name: DB_PASSWORD\n      valueFrom:\n        secretKeyRef:\n          name: myapp-secrets\n          key: db-password",
+      "line": null
+    }
+  ]
+}

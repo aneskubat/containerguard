@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<title>ContainerGuard K8s Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0F1117; color: #E0E6F0; }
+  .header { background: linear-gradient(135deg, #1A1D2E 0%, #0F1117 100%); border-bottom: 1px solid #2A2D3E; padding: 2rem; }
+  .header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
+  .header h1 span { color: #4A9EFF; }
+  .header-meta { font-size: 0.8rem; color: #666; margin-top: 6px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+  .score-card { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 12px; padding: 2rem; display: flex; align-items: center; gap: 2rem; margin-bottom: 1.5rem; }
+  .score-circle { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #27AE60; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+  .score-num { font-size: 1.8rem; font-weight: 700; color: #27AE60; line-height: 1; }
+  .score-max { font-size: 0.7rem; color: #666; }
+  .score-label { font-size: 1.1rem; font-weight: 600; color: #27AE60; margin-bottom: 4px; }
+  .score-desc { font-size: 0.85rem; color: #888; line-height: 1.5; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .sev-card { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 10px; padding: 1rem; text-align: center; }
+  .sev-card .count { font-size: 1.8rem; font-weight: 700; }
+  .sev-card .label { font-size: 0.75rem; color: #888; margin-top: 4px; }
+  .section-title { font-size: 1rem; font-weight: 600; color: #fff; margin: 1.5rem 0 0.75rem; padding-bottom: 8px; border-bottom: 1px solid #2A2D3E; }
+  .finding { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 10px; padding: 1.2rem; margin-bottom: 10px; }
+  .finding-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .sev-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; color: #fff; }
+  .finding-id { font-size: 0.75rem; color: #666; font-family: monospace; }
+  .finding-title { font-size: 0.95rem; font-weight: 600; color: #E0E6F0; }
+  .finding-desc { font-size: 0.85rem; color: #AAB; line-height: 1.6; margin-bottom: 10px; }
+  .finding-fix { font-size: 0.83rem; background: #0D1F0D; border: 1px solid #1E4D1E; border-radius: 6px; padding: 10px 12px; color: #7EC87E; line-height: 1.6; font-family: monospace; white-space: pre-wrap; }
+  .no-issues { background: #0D1F0D; border: 1px solid #1E4D1E; border-radius: 10px; padding: 1rem 1.2rem; color: #7EC87E; }
+  .footer { text-align: center; color: #444; font-size: 0.8rem; padding: 2rem; border-top: 1px solid #1A1D2E; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="container" style="padding-top:0;padding-bottom:0">
+    <h1>Container<span>Guard</span> — Kubernetes Report</h1>
+    <div class="header-meta">Skeniran fajl: deployment.hardened.yaml · Generirano: 02.05.2026 u 09:45</div>
+  </div>
+</div>
+<div class="container">
+  <div class="score-card">
+    <div class="score-circle">
+      <div class="score-num">100</div>
+      <div class="score-max">/100</div>
+    </div>
+    <div>
+      <div class="score-label">Dobro</div>
+      <div class="score-desc">
+        Pronađeno ukupno 0 problema.
+        Nema kritičnih problema.
+      </div>
+    </div>
+  </div>
+  <div class="summary-grid">
+    <div class="sev-card"><div class="count" style="color:#C0392B">0</div><div class="label">CRITICAL</div></div>
+    <div class="sev-card"><div class="count" style="color:#E67E22">0</div><div class="label">HIGH</div></div>
+    <div class="sev-card"><div class="count" style="color:#2980B9">0</div><div class="label">MEDIUM</div></div>
+    <div class="sev-card"><div class="count" style="color:#27AE60">0</div><div class="label">LOW</div></div>
+  </div>
+  <div class="section-title">Kubernetes manifest — nalazi</div>
+  <div class="no-issues">Nisu pronađeni problemi.</div>
+</div>
+<div class="footer">ContainerGuard · Kubernetes Security Scanner</div>
+</body>
+</html>

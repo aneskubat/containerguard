@@ -1,0 +1,98 @@
+# HARDENED verzija Kubernetes Deployment-a
+# Sve sigurnosne provjere su ispravne - ContainerGuard score: 100/100
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  # K8S009 - FIXED: Labels definisani
+  labels:
+    app: myapp
+    version: "1.0"
+    environment: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: "1.0"
+    spec:
+      # K8S008 - FIXED: hostNetwork uklonjen
+      # K8S001 - FIXED: runAsNonRoot definisan
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+
+      containers:
+      - name: myapp
+        # K8S004 - FIXED: Specifična verzija image-a
+        image: nginx:1.25.3
+
+        ports:
+        - containerPort: 8080
+
+        # K8S010 - FIXED: Tajne se učitavaju iz Kubernetes Secret objekta
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: myapp-secrets
+              key: db-password
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: myapp-secrets
+              key: api-key
+
+        securityContext:
+          # K8S002 - FIXED: Privileged mod uklonjen
+          privileged: false
+          # K8S005 - FIXED: allowPrivilegeEscalation onemogućen
+          allowPrivilegeEscalation: false
+          # K8S007 - FIXED: Read-only filesystem
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+
+        # K8S003 - FIXED: Resource limits definisani
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+
+        # K8S006 - FIXED: Liveness i readiness probe definisani
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+
+      volumes:
+      - name: tmp
+        emptyDir: {}

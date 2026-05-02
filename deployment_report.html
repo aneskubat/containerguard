@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<title>ContainerGuard K8s Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0F1117; color: #E0E6F0; }
+  .header { background: linear-gradient(135deg, #1A1D2E 0%, #0F1117 100%); border-bottom: 1px solid #2A2D3E; padding: 2rem; }
+  .header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
+  .header h1 span { color: #4A9EFF; }
+  .header-meta { font-size: 0.8rem; color: #666; margin-top: 6px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+  .score-card { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 12px; padding: 2rem; display: flex; align-items: center; gap: 2rem; margin-bottom: 1.5rem; }
+  .score-circle { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #C0392B; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+  .score-num { font-size: 1.8rem; font-weight: 700; color: #C0392B; line-height: 1; }
+  .score-max { font-size: 0.7rem; color: #666; }
+  .score-label { font-size: 1.1rem; font-weight: 600; color: #C0392B; margin-bottom: 4px; }
+  .score-desc { font-size: 0.85rem; color: #888; line-height: 1.5; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .sev-card { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 10px; padding: 1rem; text-align: center; }
+  .sev-card .count { font-size: 1.8rem; font-weight: 700; }
+  .sev-card .label { font-size: 0.75rem; color: #888; margin-top: 4px; }
+  .section-title { font-size: 1rem; font-weight: 600; color: #fff; margin: 1.5rem 0 0.75rem; padding-bottom: 8px; border-bottom: 1px solid #2A2D3E; }
+  .finding { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 10px; padding: 1.2rem; margin-bottom: 10px; }
+  .finding-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .sev-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; color: #fff; }
+  .finding-id { font-size: 0.75rem; color: #666; font-family: monospace; }
+  .finding-title { font-size: 0.95rem; font-weight: 600; color: #E0E6F0; }
+  .finding-desc { font-size: 0.85rem; color: #AAB; line-height: 1.6; margin-bottom: 10px; }
+  .finding-fix { font-size: 0.83rem; background: #0D1F0D; border: 1px solid #1E4D1E; border-radius: 6px; padding: 10px 12px; color: #7EC87E; line-height: 1.6; font-family: monospace; white-space: pre-wrap; }
+  .no-issues { background: #0D1F0D; border: 1px solid #1E4D1E; border-radius: 10px; padding: 1rem 1.2rem; color: #7EC87E; }
+  .footer { text-align: center; color: #444; font-size: 0.8rem; padding: 2rem; border-top: 1px solid #1A1D2E; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="container" style="padding-top:0;padding-bottom:0">
+    <h1>Container<span>Guard</span> — Kubernetes Report</h1>
+    <div class="header-meta">Skeniran fajl: deployment.yaml · Generirano: 02.05.2026 u 09:45</div>
+  </div>
+</div>
+<div class="container">
+  <div class="score-card">
+    <div class="score-circle">
+      <div class="score-num">0</div>
+      <div class="score-max">/100</div>
+    </div>
+    <div>
+      <div class="score-label">Kritično</div>
+      <div class="score-desc">
+        Pronađeno ukupno 9 problema.
+        Kritični problemi zahtijevaju hitnu pažnju.
+      </div>
+    </div>
+  </div>
+  <div class="summary-grid">
+    <div class="sev-card"><div class="count" style="color:#C0392B">3</div><div class="label">CRITICAL</div></div>
+    <div class="sev-card"><div class="count" style="color:#E67E22">3</div><div class="label">HIGH</div></div>
+    <div class="sev-card"><div class="count" style="color:#2980B9">3</div><div class="label">MEDIUM</div></div>
+    <div class="sev-card"><div class="count" style="color:#27AE60">0</div><div class="label">LOW</div></div>
+  </div>
+  <div class="section-title">Kubernetes manifest — nalazi</div>
+  
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
+            <span class="finding-id">K8S001</span>
+            <span class="finding-title">Container se pokreće kao root (runAsRoot)</span>
+          </div>
+          <div class="finding-desc">Pokretanje kontejnera kao root u Kubernetes okruženju je kritičan propust. U slučaju kompromitacije, napadač dobiva root pristup kontejneru što značajno olakšava container escape napade prema host sistemu.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
+            <span class="finding-id">K8S002</span>
+            <span class="finding-title">Privilegovani kontejner (privileged: true)</span>
+          </div>
+          <div class="finding-desc">Privilegovani kontejner ima pristup svim Linux capabilities i može direktno pristupati host uređajima. Ekvivalentno pokretanju procesa s root pravima direktno na hostu.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Ukloni 'privileged: true' iz securityContext.</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#E67E22">HIGH</span>
+            <span class="finding-id">K8S003</span>
+            <span class="finding-title">Nedostaju resource limits</span>
+          </div>
+          <div class="finding-desc">Bez definisanih CPU i memorijskih limita, jedan Pod može potrošiti sve resurse noda i srušiti ostale servise — resource exhaustion napad. Kubernetes scheduler također ne može optimalno rasporediti Podove.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj resources:
+  limits:
+    cpu: '500m'
+    memory: '512Mi'
+  requests:
+    cpu: '250m'
+    memory: '256Mi'</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#E67E22">HIGH</span>
+            <span class="finding-id">K8S004</span>
+            <span class="finding-title">Koristi se 'latest' tag za container image</span>
+          </div>
+          <div class="finding-desc">Tag 'latest' nije deterministički — svaki deployment može pokrenuti drugačiju verziju image-a. Ovo otežava audit, rollback i može uvesti ranjivosti bez znanja operatora.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Koristi specifičan tag, npr. nginx:1.25.3 umjesto nginx:latest</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#E67E22">HIGH</span>
+            <span class="finding-id">K8S005</span>
+            <span class="finding-title">allowPrivilegeEscalation nije onemogućen</span>
+          </div>
+          <div class="finding-desc">Bez 'allowPrivilegeEscalation: false', proces unutar kontejnera može steći više privilegija od roditeljskog procesa kroz setuid/setgid mehanizme, što olakšava privilege escalation napade.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj u securityContext:
+  allowPrivilegeEscalation: false</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
+            <span class="finding-id">K8S006</span>
+            <span class="finding-title">Nedostaju liveness i readiness probe</span>
+          </div>
+          <div class="finding-desc">Bez health proba, Kubernetes ne može automatski detektovati i restartati nezdrave kontejnere. Aplikacija može biti u neispravnom stanju ali Kubernetes nastavlja slati saobraćaj na nju.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj livenessProbe i readinessProbe u container spec.</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
+            <span class="finding-id">K8S007</span>
+            <span class="finding-title">Root filesystem nije read-only</span>
+          </div>
+          <div class="finding-desc">Bez readOnlyRootFilesystem: true, napadač koji kompromituje kontejner može pisati na filesystem — instalirati alate, modifikovati konfiguracije ili persistovati malware.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj u securityContext:
+  readOnlyRootFilesystem: true</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
+            <span class="finding-id">K8S008</span>
+            <span class="finding-title">Hostnetwork ili hostPID je omogućen</span>
+          </div>
+          <div class="finding-desc">hostNetwork: true ili hostPID: true uklanjaju mrežnu/procesnu izolaciju između kontejnera i hosta. Napadač može vidjeti sve mrežne interfejse i procese na host sistemu.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Ukloni 'hostNetwork: true' i 'hostPID: true' iz Pod spec-a.</div>
+        </div>
+        <div class="finding">
+          <div class="finding-header">
+            <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
+            <span class="finding-id">K8S010</span>
+            <span class="finding-title">Secrets u environment varijablama (plaintext)</span>
+          </div>
+          <div class="finding-desc">Definisanje tajnih podataka direktno u env varijablama Pod-a znači da su vidljivi svakome s pristupom kubectl describe. Kubernetes Secrets objekat pruža bolju kontrolu pristupa.</div>
+          <div class="finding-fix"><strong>Rješenje:</strong> Koristi secretKeyRef umjesto direktnih vrijednosti:
+  env:
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: myapp-secrets
+          key: db-password</div>
+        </div>
+</div>
+<div class="footer">ContainerGuard · Kubernetes Security Scanner</div>
+</body>
+</html>
