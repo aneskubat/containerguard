@@ -1,0 +1,76 @@
+name: ContainerGuard Hardened Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  hardened-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Copy hardened configs for scanning
+        run: |
+          cp Dockerfile.hardened Dockerfile.hardened.test
+          cp docker-compose.hardened.yml docker-compose.hardened.test.yml
+
+      - name: Scan hardened Dockerfile and docker-compose
+        run: |
+          python3 - <<'EOF'
+          import sys
+          sys.path.insert(0, '.')
+          from scanner import run_dockerfile_checks, run_compose_checks, calculate_score
+
+          with open('Dockerfile.hardened', 'r') as f:
+              df_content = f.read()
+
+          with open('docker-compose.hardened.yml', 'r') as f:
+              dc_content = f.read()
+
+          df_findings = run_dockerfile_checks(df_content)
+          dc_findings = run_compose_checks(dc_content)
+          all_findings = df_findings + dc_findings
+          score = calculate_score(all_findings)
+
+          print(f"\n  Hardened Docker config score: {score}/100")
+          print(f"  Issues found: {len(all_findings)}")
+
+          if score < 80:
+              print("  FAIL - Hardened config did not pass security checks!")
+              sys.exit(1)
+          else:
+              print("  PASS - Hardened config passed all security checks!")
+          EOF
+
+      - name: Scan hardened Kubernetes manifest
+        run: |
+          python3 - <<'EOF'
+          import sys
+          sys.path.insert(0, '.')
+          from k8s_scanner import run_k8s_checks, calculate_score
+
+          with open('deployment.hardened.yaml', 'r') as f:
+              content = f.read()
+
+          findings = run_k8s_checks(content)
+          score = calculate_score(findings)
+
+          print(f"\n  Hardened K8s manifest score: {score}/100")
+          print(f"  Issues found: {len(findings)}")
+
+          if score < 80:
+              print("  FAIL - Hardened K8s manifest did not pass security checks!")
+              sys.exit(1)
+          else:
+              print("  PASS - Hardened K8s manifest passed all security checks!")
+          EOF
