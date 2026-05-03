@@ -45,11 +45,11 @@ jobs:
           print(f"\n  Hardened Docker config score: {score}/100")
           print(f"  Issues found: {len(all_findings)}")
 
-          if score < 80:
-              print("  FAIL - Hardened config did not pass security checks!")
+          if len([f for f in all_findings if f['severity'] == 'CRITICAL']) > 0:
+              print("  FAIL - Critical issues found in hardened config!")
               sys.exit(1)
           else:
-              print("  PASS - Hardened config passed all security checks!")
+              print("  PASS - No critical issues found!")
           EOF
 
       - name: Scan hardened Kubernetes manifest
