@@ -155,8 +155,8 @@ COMPOSE_CHECKS = [
         ),
         "fix": "Use a .env file (added to .gitignore) or an external secrets manager (Vault, AWS Secrets Manager).",
         "pattern": re.compile(
-            r"(PASSWORD|SECRET|KEY|TOKEN|API_KEY|PASSWD)\s*:\s*\S+",
-            re.IGNORECASE,
+            r"^\s*(PASSWORD|SECRET|KEY|TOKEN|API_KEY|PASSWD)\s*[=:]\s*\S+",
+            re.IGNORECASE | re.MULTILINE,
         ),
         "check_fn": "pattern",
     },
