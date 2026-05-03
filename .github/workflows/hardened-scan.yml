@@ -18,12 +18,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Copy hardened configs for scanning
-        run: |
-          cp Dockerfile.hardened Dockerfile.hardened.test
-          cp docker-compose.hardened.yml docker-compose.hardened.test.yml
-
+          
       - name: Scan hardened Dockerfile and docker-compose
         run: |
           python3 - <<'EOF'
