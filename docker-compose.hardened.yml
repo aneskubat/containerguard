@@ -1,5 +1,5 @@
-# HARDENED verzija docker-compose.yml
-# Sve sigurnosne provjere su ispravne - ContainerGuard score: 100/100
+# HARDENED docker-compose.yml
+# All security checks pass - ContainerGuard score: 100/100
 
 version: '3.8'
 
@@ -8,19 +8,19 @@ services:
     build: .
     ports:
       - "8080:8080"
-    
-    # DC003 - FIXED: Tajne se učitavaju iz .env fajla koji nije u repozitoriju
+
+    # DC003 - FIXED: Secrets loaded from .env file (not in repository)
     env_file:
       - .env
-    
-    # DC001 - FIXED: Privileged mod uklonjen
-    # privileged: true  <-- uklonjeno!
-    
-    # DC002 - FIXED: Docker socket nije montiran
+
+    # DC001 - FIXED: Privileged mode removed
+    # privileged: true  <-- removed!
+
+    # DC002 - FIXED: Docker socket not mounted
     volumes:
-      - app-data:/app/data  # samo named volume za podatke
-    
-    # DC004 - FIXED: Resource limits definisani
+      - app-data:/app/data
+
+    # DC004 - FIXED: Resource limits defined
     deploy:
       resources:
         limits:
@@ -29,17 +29,17 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
-    
-    # DC005 - FIXED: Restart policy definisan
+
+    # DC005 - FIXED: Restart policy defined
     restart: unless-stopped
-    
-    # Dodatni hardening
+
+    # Additional hardening
     security_opt:
-      - no-new-privileges:true  # kontejner ne može dobiti nova prava
-    read_only: true             # filesystem je read-only
-    
+      - no-new-privileges:true
+    read_only: true
+
   db:
-    image: postgres:16.3        # specificna verzija, ne latest
+    image: postgres:16.3
     env_file:
       - .env
     volumes:

@@ -1,11 +1,11 @@
-# HARDENED verzija Kubernetes Deployment-a
-# Sve sigurnosne provjere su ispravne - ContainerGuard score: 100/100
+# HARDENED Kubernetes Deployment
+# All security checks pass - ContainerGuard score: 100/100
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: myapp
-  # K8S009 - FIXED: Labels definisani
+  # K8S009 - FIXED: Labels defined
   labels:
     app: myapp
     version: "1.0"
@@ -21,8 +21,8 @@ spec:
         app: myapp
         version: "1.0"
     spec:
-      # K8S008 - FIXED: hostNetwork uklonjen
-      # K8S001 - FIXED: runAsNonRoot definisan
+      # K8S008 - FIXED: hostNetwork removed
+      # K8S001 - FIXED: runAsNonRoot defined
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -31,13 +31,13 @@ spec:
 
       containers:
       - name: myapp
-        # K8S004 - FIXED: Specifična verzija image-a
+        # K8S004 - FIXED: Specific image version
         image: nginx:1.25.3
 
         ports:
         - containerPort: 8080
 
-        # K8S010 - FIXED: Tajne se učitavaju iz Kubernetes Secret objekta
+        # K8S010 - FIXED: Secrets loaded from Kubernetes Secret object
         env:
         - name: DB_PASSWORD
           valueFrom:
@@ -51,17 +51,17 @@ spec:
               key: api-key
 
         securityContext:
-          # K8S002 - FIXED: Privileged mod uklonjen
+          # K8S002 - FIXED: Privileged mode removed
           privileged: false
-          # K8S005 - FIXED: allowPrivilegeEscalation onemogućen
+          # K8S005 - FIXED: allowPrivilegeEscalation disabled
           allowPrivilegeEscalation: false
-          # K8S007 - FIXED: Read-only filesystem
+          # K8S007 - FIXED: Read-only root filesystem
           readOnlyRootFilesystem: true
           capabilities:
             drop:
               - ALL
 
-        # K8S003 - FIXED: Resource limits definisani
+        # K8S003 - FIXED: Resource limits defined
         resources:
           limits:
             cpu: "500m"
@@ -70,7 +70,7 @@ spec:
             cpu: "250m"
             memory: "256Mi"
 
-        # K8S006 - FIXED: Liveness i readiness probe definisani
+        # K8S006 - FIXED: Liveness and readiness probes defined
         livenessProbe:
           httpGet:
             path: /health

@@ -1,0 +1,14 @@
+# Generated reports - do not commit
+*_report.html
+*_report.json
+k8s_report.json
+containerguard_report.html
+containerguard_report.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment secrets - never commit!
+.env

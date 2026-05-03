@@ -1,77 +1,77 @@
 {
-  "timestamp": "2026-05-02T09:45:15.360799",
+  "timestamp": "2026-05-03T08:53:50.811787",
   "total_findings": 9,
   "findings": [
     {
       "id": "K8S001",
       "severity": "CRITICAL",
-      "title": "Container se pokreće kao root (runAsRoot)",
-      "description": "Pokretanje kontejnera kao root u Kubernetes okruženju je kritičan propust. U slučaju kompromitacije, napadač dobiva root pristup kontejneru što značajno olakšava container escape napade prema host sistemu.",
-      "fix": "Dodaj securityContext:\n  runAsNonRoot: true\n  runAsUser: 1000",
+      "title": "Container runs as root (missing runAsNonRoot)",
+      "description": "Running a container as root in Kubernetes is a critical misconfiguration. If compromised, the attacker gains root access to the container, significantly increasing the risk of a container escape to the host system.",
+      "fix": "Add to securityContext:\n  runAsNonRoot: true\n  runAsUser: 1000",
       "line": null
     },
     {
       "id": "K8S002",
       "severity": "CRITICAL",
-      "title": "Privilegovani kontejner (privileged: true)",
-      "description": "Privilegovani kontejner ima pristup svim Linux capabilities i može direktno pristupati host uređajima. Ekvivalentno pokretanju procesa s root pravima direktno na hostu.",
-      "fix": "Ukloni 'privileged: true' iz securityContext.",
+      "title": "Privileged container (privileged: true)",
+      "description": "A privileged container has access to all Linux capabilities and can directly access host devices. This is equivalent to running a process with root privileges directly on the host.",
+      "fix": "Remove 'privileged: true' from securityContext.",
       "line": null
     },
     {
       "id": "K8S003",
       "severity": "HIGH",
-      "title": "Nedostaju resource limits",
-      "description": "Bez definisanih CPU i memorijskih limita, jedan Pod može potrošiti sve resurse noda i srušiti ostale servise — resource exhaustion napad. Kubernetes scheduler također ne može optimalno rasporediti Podove.",
-      "fix": "Dodaj resources:\n  limits:\n    cpu: '500m'\n    memory: '512Mi'\n  requests:\n    cpu: '250m'\n    memory: '256Mi'",
+      "title": "Missing resource limits",
+      "description": "Without CPU and memory limits, a single Pod can consume all node resources and bring down other services — known as a resource exhaustion attack. The Kubernetes scheduler also cannot optimally place Pods without this information.",
+      "fix": "Add to container spec:\n  resources:\n    limits:\n      cpu: '500m'\n      memory: '512Mi'\n    requests:\n      cpu: '250m'\n      memory: '256Mi'",
       "line": null
     },
     {
       "id": "K8S004",
       "severity": "HIGH",
-      "title": "Koristi se 'latest' tag za container image",
-      "description": "Tag 'latest' nije deterministički — svaki deployment može pokrenuti drugačiju verziju image-a. Ovo otežava audit, rollback i može uvesti ranjivosti bez znanja operatora.",
-      "fix": "Koristi specifičan tag, npr. nginx:1.25.3 umjesto nginx:latest",
+      "title": "Latest tag used for container image",
+      "description": "The 'latest' tag is not deterministic — each deployment may run a different image version. This makes auditing difficult, prevents reliable rollbacks, and can silently introduce vulnerabilities.",
+      "fix": "Use a specific tag, e.g. nginx:1.25.3 instead of nginx:latest",
       "line": null
     },
     {
       "id": "K8S005",
       "severity": "HIGH",
-      "title": "allowPrivilegeEscalation nije onemogućen",
-      "description": "Bez 'allowPrivilegeEscalation: false', proces unutar kontejnera može steći više privilegija od roditeljskog procesa kroz setuid/setgid mehanizme, što olakšava privilege escalation napade.",
-      "fix": "Dodaj u securityContext:\n  allowPrivilegeEscalation: false",
+      "title": "allowPrivilegeEscalation not disabled",
+      "description": "Without 'allowPrivilegeEscalation: false', a process inside the container can gain more privileges than its parent process through setuid/setgid mechanisms, making privilege escalation attacks easier.",
+      "fix": "Add to securityContext:\n  allowPrivilegeEscalation: false",
       "line": null
     },
     {
       "id": "K8S006",
       "severity": "MEDIUM",
-      "title": "Nedostaju liveness i readiness probe",
-      "description": "Bez health proba, Kubernetes ne može automatski detektovati i restartati nezdrave kontejnere. Aplikacija može biti u neispravnom stanju ali Kubernetes nastavlja slati saobraćaj na nju.",
-      "fix": "Dodaj livenessProbe i readinessProbe u container spec.",
+      "title": "Missing liveness and readiness probes",
+      "description": "Without health probes, Kubernetes cannot automatically detect and restart unhealthy containers. The application may be in a broken state while Kubernetes continues routing traffic to it.",
+      "fix": "Add livenessProbe and readinessProbe to the container spec.",
       "line": null
     },
     {
       "id": "K8S007",
       "severity": "MEDIUM",
-      "title": "Root filesystem nije read-only",
-      "description": "Bez readOnlyRootFilesystem: true, napadač koji kompromituje kontejner može pisati na filesystem — instalirati alate, modifikovati konfiguracije ili persistovati malware.",
-      "fix": "Dodaj u securityContext:\n  readOnlyRootFilesystem: true",
+      "title": "Root filesystem is not read-only",
+      "description": "Without readOnlyRootFilesystem: true, an attacker who compromises the container can write to the filesystem — installing tools, modifying configurations, or persisting malware across restarts.",
+      "fix": "Add to securityContext:\n  readOnlyRootFilesystem: true",
       "line": null
     },
     {
       "id": "K8S008",
       "severity": "MEDIUM",
-      "title": "Hostnetwork ili hostPID je omogućen",
-      "description": "hostNetwork: true ili hostPID: true uklanjaju mrežnu/procesnu izolaciju između kontejnera i hosta. Napadač može vidjeti sve mrežne interfejse i procese na host sistemu.",
-      "fix": "Ukloni 'hostNetwork: true' i 'hostPID: true' iz Pod spec-a.",
+      "title": "hostNetwork or hostPID enabled",
+      "description": "hostNetwork: true or hostPID: true removes network/process isolation between the container and the host. An attacker can see all network interfaces and processes running on the host system.",
+      "fix": "Remove 'hostNetwork: true' and 'hostPID: true' from the Pod spec.",
       "line": null
     },
     {
       "id": "K8S010",
       "severity": "CRITICAL",
-      "title": "Secrets u environment varijablama (plaintext)",
-      "description": "Definisanje tajnih podataka direktno u env varijablama Pod-a znači da su vidljivi svakome s pristupom kubectl describe. Kubernetes Secrets objekat pruža bolju kontrolu pristupa.",
-      "fix": "Koristi secretKeyRef umjesto direktnih vrijednosti:\n  env:\n    - name: DB_PASSWORD\n      valueFrom:\n        secretKeyRef:\n          name: myapp-secrets\n          key: db-password",
+      "title": "Secrets in plaintext environment variables",
+      "description": "Defining secrets directly as env var values means they are visible to anyone with kubectl describe access. Kubernetes Secret objects provide better access control and can be encrypted at rest.",
+      "fix": "Use secretKeyRef instead of plain values:\n  env:\n    - name: DB_PASSWORD\n      valueFrom:\n        secretKeyRef:\n          name: myapp-secrets\n          key: db-password",
       "line": null
     }
   ]

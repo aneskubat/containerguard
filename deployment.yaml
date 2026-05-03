@@ -1,4 +1,4 @@
-# ⚠️  OVO JE NAMJERNO RANJIVA KONFIGURACIJA - SAMO ZA TESTIRANJE!
+# ⚠️  THIS IS AN INTENTIONALLY VULNERABLE CONFIGURATION - FOR TESTING ONLY!
 
 apiVersion: apps/v1
 kind: Deployment
@@ -13,7 +13,7 @@ spec:
     metadata:
       name: myapp-pod
     spec:
-      # K8S008 - hostNetwork uklanja mrežnu izolaciju!
+      # K8S008 - hostNetwork removes network isolation!
       hostNetwork: true
       
       containers:
@@ -24,7 +24,7 @@ spec:
         ports:
         - containerPort: 80
         
-        # K8S010 - Hardcoded tajne u env varijablama!
+        # K8S010 - Hardcoded secrets in env variables!
         env:
         - name: DB_PASSWORD
           value: "admin1234"
@@ -32,13 +32,13 @@ spec:
           value: "super_secret_key_123"
         
         securityContext:
-          # K8S002 - Privilegovani kontejner!
+          # K8S002 - Privileged container!
           privileged: true
-          # K8S005 - allowPrivilegeEscalation nije false!
+          # K8S005 - allowPrivilegeEscalation not disabled!
         
-        # K8S003 - Nema resource limits!
-        # K8S006 - Nema liveness/readiness probe!
-        # K8S007 - readOnlyRootFilesystem nije true!
+        # K8S003 - No resource limits!
+        # K8S006 - No liveness/readiness probes!
+        # K8S007 - readOnlyRootFilesystem not set!
         
-    # K8S001 - Nema runAsNonRoot!
-    # K8S009 - Nema labels!
+    # K8S001 - No runAsNonRoot!
+    # K8S009 - No labels!

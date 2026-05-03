@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 ContainerGuard - Kubernetes Security Scanner
-Autor: aneskubat
-Opis: Analizira Kubernetes YAML manifeste i pronalazi sigurnosne propuste.
+Author: aneskubat
+Description: Analyzes Kubernetes YAML manifests for security misconfigurations.
 """
 
 import re
@@ -13,137 +13,137 @@ from datetime import datetime
 
 
 # ─────────────────────────────────────────────
-#  DEFINICIJA PROVJERA
+#  CHECKS DEFINITION
 # ─────────────────────────────────────────────
 
 K8S_CHECKS = [
     {
         "id": "K8S001",
         "severity": "CRITICAL",
-        "title": "Container se pokreće kao root (runAsRoot)",
+        "title": "Container runs as root (missing runAsNonRoot)",
         "description": (
-            "Pokretanje kontejnera kao root u Kubernetes okruženju je kritičan propust. "
-            "U slučaju kompromitacije, napadač dobiva root pristup kontejneru što "
-            "značajno olakšava container escape napade prema host sistemu."
+            "Running a container as root in Kubernetes is a critical misconfiguration. "
+            "If compromised, the attacker gains root access to the container, "
+            "significantly increasing the risk of a container escape to the host system."
         ),
-        "fix": "Dodaj securityContext:\n  runAsNonRoot: true\n  runAsUser: 1000",
+        "fix": "Add to securityContext:\n  runAsNonRoot: true\n  runAsUser: 1000",
         "pattern": None,
         "check_fn": "check_no_run_as_non_root",
     },
     {
         "id": "K8S002",
         "severity": "CRITICAL",
-        "title": "Privilegovani kontejner (privileged: true)",
+        "title": "Privileged container (privileged: true)",
         "description": (
-            "Privilegovani kontejner ima pristup svim Linux capabilities i "
-            "može direktno pristupati host uređajima. Ekvivalentno pokretanju "
-            "procesa s root pravima direktno na hostu."
+            "A privileged container has access to all Linux capabilities and "
+            "can directly access host devices. This is equivalent to running "
+            "a process with root privileges directly on the host."
         ),
-        "fix": "Ukloni 'privileged: true' iz securityContext.",
+        "fix": "Remove 'privileged: true' from securityContext.",
         "pattern": re.compile(r"privileged\s*:\s*true", re.IGNORECASE),
         "check_fn": "pattern",
     },
     {
         "id": "K8S003",
         "severity": "HIGH",
-        "title": "Nedostaju resource limits",
+        "title": "Missing resource limits",
         "description": (
-            "Bez definisanih CPU i memorijskih limita, jedan Pod može potrošiti "
-            "sve resurse noda i srušiti ostale servise — resource exhaustion napad. "
-            "Kubernetes scheduler također ne može optimalno rasporediti Podove."
+            "Without CPU and memory limits, a single Pod can consume all node resources "
+            "and bring down other services — known as a resource exhaustion attack. "
+            "The Kubernetes scheduler also cannot optimally place Pods without this information."
         ),
-        "fix": "Dodaj resources:\n  limits:\n    cpu: '500m'\n    memory: '512Mi'\n  requests:\n    cpu: '250m'\n    memory: '256Mi'",
+        "fix": "Add to container spec:\n  resources:\n    limits:\n      cpu: '500m'\n      memory: '512Mi'\n    requests:\n      cpu: '250m'\n      memory: '256Mi'",
         "pattern": None,
         "check_fn": "check_no_resources",
     },
     {
         "id": "K8S004",
         "severity": "HIGH",
-        "title": "Koristi se 'latest' tag za container image",
+        "title": "Latest tag used for container image",
         "description": (
-            "Tag 'latest' nije deterministički — svaki deployment može pokrenuti "
-            "drugačiju verziju image-a. Ovo otežava audit, rollback i može "
-            "uvesti ranjivosti bez znanja operatora."
+            "The 'latest' tag is not deterministic — each deployment may run a different "
+            "image version. This makes auditing difficult, prevents reliable rollbacks, "
+            "and can silently introduce vulnerabilities."
         ),
-        "fix": "Koristi specifičan tag, npr. nginx:1.25.3 umjesto nginx:latest",
+        "fix": "Use a specific tag, e.g. nginx:1.25.3 instead of nginx:latest",
         "pattern": re.compile(r"image\s*:\s*\S+:latest", re.IGNORECASE),
         "check_fn": "pattern",
     },
     {
         "id": "K8S005",
         "severity": "HIGH",
-        "title": "allowPrivilegeEscalation nije onemogućen",
+        "title": "allowPrivilegeEscalation not disabled",
         "description": (
-            "Bez 'allowPrivilegeEscalation: false', proces unutar kontejnera "
-            "može steći više privilegija od roditeljskog procesa kroz "
-            "setuid/setgid mehanizme, što olakšava privilege escalation napade."
+            "Without 'allowPrivilegeEscalation: false', a process inside the container "
+            "can gain more privileges than its parent process through setuid/setgid "
+            "mechanisms, making privilege escalation attacks easier."
         ),
-        "fix": "Dodaj u securityContext:\n  allowPrivilegeEscalation: false",
+        "fix": "Add to securityContext:\n  allowPrivilegeEscalation: false",
         "pattern": None,
         "check_fn": "check_no_privilege_escalation",
     },
     {
         "id": "K8S006",
         "severity": "MEDIUM",
-        "title": "Nedostaju liveness i readiness probe",
+        "title": "Missing liveness and readiness probes",
         "description": (
-            "Bez health proba, Kubernetes ne može automatski detektovati "
-            "i restartati nezdrave kontejnere. Aplikacija može biti u "
-            "neispravnom stanju ali Kubernetes nastavlja slati saobraćaj na nju."
+            "Without health probes, Kubernetes cannot automatically detect and restart "
+            "unhealthy containers. The application may be in a broken state while "
+            "Kubernetes continues routing traffic to it."
         ),
-        "fix": "Dodaj livenessProbe i readinessProbe u container spec.",
+        "fix": "Add livenessProbe and readinessProbe to the container spec.",
         "pattern": None,
         "check_fn": "check_no_probes",
     },
     {
         "id": "K8S007",
         "severity": "MEDIUM",
-        "title": "Root filesystem nije read-only",
+        "title": "Root filesystem is not read-only",
         "description": (
-            "Bez readOnlyRootFilesystem: true, napadač koji kompromituje "
-            "kontejner može pisati na filesystem — instalirati alate, "
-            "modifikovati konfiguracije ili persistovati malware."
+            "Without readOnlyRootFilesystem: true, an attacker who compromises the container "
+            "can write to the filesystem — installing tools, modifying configurations, "
+            "or persisting malware across restarts."
         ),
-        "fix": "Dodaj u securityContext:\n  readOnlyRootFilesystem: true",
+        "fix": "Add to securityContext:\n  readOnlyRootFilesystem: true",
         "pattern": None,
         "check_fn": "check_no_readonly_fs",
     },
     {
         "id": "K8S008",
         "severity": "MEDIUM",
-        "title": "Hostnetwork ili hostPID je omogućen",
+        "title": "hostNetwork or hostPID enabled",
         "description": (
-            "hostNetwork: true ili hostPID: true uklanjaju mrežnu/procesnu "
-            "izolaciju između kontejnera i hosta. Napadač može vidjeti "
-            "sve mrežne interfejse i procese na host sistemu."
+            "hostNetwork: true or hostPID: true removes network/process isolation "
+            "between the container and the host. An attacker can see all network "
+            "interfaces and processes running on the host system."
         ),
-        "fix": "Ukloni 'hostNetwork: true' i 'hostPID: true' iz Pod spec-a.",
+        "fix": "Remove 'hostNetwork: true' and 'hostPID: true' from the Pod spec.",
         "pattern": re.compile(r"(hostNetwork|hostPID)\s*:\s*true", re.IGNORECASE),
         "check_fn": "pattern",
     },
     {
         "id": "K8S009",
         "severity": "LOW",
-        "title": "Nedostaju labels na resursima",
+        "title": "Missing labels on resources",
         "description": (
-            "Labels su ključne za upravljanje Kubernetes resursima — "
-            "selekcija, monitoring, network policy. Bez labels, "
-            "teže je pratiti i upravljati resursima u klasteru."
+            "Labels are essential for managing Kubernetes resources — selection, "
+            "monitoring, and network policies all rely on them. Without labels, "
+            "it becomes harder to track and manage resources in the cluster."
         ),
-        "fix": "Dodaj metadata.labels, npr:\n  labels:\n    app: myapp\n    version: '1.0'",
+        "fix": "Add metadata.labels, e.g:\n  labels:\n    app: myapp\n    version: '1.0'",
         "pattern": None,
         "check_fn": "check_no_labels",
     },
     {
         "id": "K8S010",
         "severity": "CRITICAL",
-        "title": "Secrets u environment varijablama (plaintext)",
+        "title": "Secrets in plaintext environment variables",
         "description": (
-            "Definisanje tajnih podataka direktno u env varijablama Pod-a "
-            "znači da su vidljivi svakome s pristupom kubectl describe. "
-            "Kubernetes Secrets objekat pruža bolju kontrolu pristupa."
+            "Defining secrets directly as env var values means they are visible to anyone "
+            "with kubectl describe access. Kubernetes Secret objects provide better "
+            "access control and can be encrypted at rest."
         ),
-        "fix": "Koristi secretKeyRef umjesto direktnih vrijednosti:\n  env:\n    - name: DB_PASSWORD\n      valueFrom:\n        secretKeyRef:\n          name: myapp-secrets\n          key: db-password",
+        "fix": "Use secretKeyRef instead of plain values:\n  env:\n    - name: DB_PASSWORD\n      valueFrom:\n        secretKeyRef:\n          name: myapp-secrets\n          key: db-password",
         "pattern": re.compile(
             r"^\s*value\s*:\s*['\"]?.{4,}['\"]?\s*$",
             re.IGNORECASE | re.MULTILINE,
@@ -154,7 +154,7 @@ K8S_CHECKS = [
 
 
 # ─────────────────────────────────────────────
-#  LOGIKA PROVJERA
+#  CHECK LOGIC
 # ─────────────────────────────────────────────
 
 def run_k8s_checks(content):
@@ -217,15 +217,15 @@ def generate_html_report(findings, score, filename):
               for s in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]}
 
     if score >= 80:
-        score_color, score_label = "#27AE60", "Dobro"
+        score_color, score_label = "#27AE60", "Good"
     elif score >= 50:
-        score_color, score_label = "#E67E22", "Umjereno"
+        score_color, score_label = "#E67E22", "Moderate"
     else:
-        score_color, score_label = "#C0392B", "Kritično"
+        score_color, score_label = "#C0392B", "Critical"
 
     def finding_cards(findings):
         if not findings:
-            return '<div class="no-issues">Nisu pronađeni problemi.</div>'
+            return '<div class="no-issues">No issues found.</div>'
         html = ""
         for f in findings:
             color = SEVERITY_COLOR[f["severity"]]
@@ -237,14 +237,14 @@ def generate_html_report(findings, score, filename):
             <span class="finding-title">{f['title']}</span>
           </div>
           <div class="finding-desc">{f['description']}</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> {f['fix']}</div>
+          <div class="finding-fix"><strong>Fix:</strong> {f['fix']}</div>
         </div>"""
         return html
 
-    timestamp = datetime.now().strftime("%d.%m.%Y u %H:%M")
+    timestamp = datetime.now().strftime("%Y-%m-%d at %H:%M")
 
     return f"""<!DOCTYPE html>
-<html lang="bs">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>ContainerGuard K8s Report</title>
@@ -282,7 +282,7 @@ def generate_html_report(findings, score, filename):
 <div class="header">
   <div class="container" style="padding-top:0;padding-bottom:0">
     <h1>Container<span>Guard</span> — Kubernetes Report</h1>
-    <div class="header-meta">Skeniran fajl: {filename} · Generirano: {timestamp}</div>
+    <div class="header-meta">Scanned file: {filename} · Generated: {timestamp}</div>
   </div>
 </div>
 <div class="container">
@@ -294,8 +294,8 @@ def generate_html_report(findings, score, filename):
     <div>
       <div class="score-label">{score_label}</div>
       <div class="score-desc">
-        Pronađeno ukupno {len(findings)} problema.
-        {'Kritični problemi zahtijevaju hitnu pažnju.' if counts['CRITICAL'] > 0 else 'Nema kritičnih problema.'}
+        Found {len(findings)} {'issues' if len(findings) != 1 else 'issue'} in total.
+        {'Critical issues require immediate attention.' if counts['CRITICAL'] > 0 else 'No critical issues found.'}
       </div>
     </div>
   </div>
@@ -305,7 +305,7 @@ def generate_html_report(findings, score, filename):
     <div class="sev-card"><div class="count" style="color:#2980B9">{counts['MEDIUM']}</div><div class="label">MEDIUM</div></div>
     <div class="sev-card"><div class="count" style="color:#27AE60">{counts['LOW']}</div><div class="label">LOW</div></div>
   </div>
-  <div class="section-title">Kubernetes manifest — nalazi</div>
+  <div class="section-title">Kubernetes manifest — findings</div>
   {finding_cards(findings)}
 </div>
 <div class="footer">ContainerGuard · Kubernetes Security Scanner</div>
@@ -319,7 +319,7 @@ def generate_html_report(findings, score, filename):
 
 def scan_file(path):
     if not os.path.exists(path):
-        return None, f"Fajl nije pronađen: {path}"
+        return None, f"File not found: {path}"
     with open(path, "r", encoding="utf-8") as f:
         return f.read(), None
 
@@ -330,7 +330,6 @@ def main():
     print("║    Kubernetes Security Analysis      ║")
     print("╚══════════════════════════════════════╝\n")
 
-    # Traži sve .yaml i .yml fajlove osim docker-compose
     yaml_files = [
         f for f in os.listdir(".")
         if f.endswith((".yaml", ".yml"))
@@ -339,7 +338,7 @@ def main():
     ]
 
     if not yaml_files:
-        print("  ⚠  Nisu pronađeni Kubernetes YAML fajlovi.")
+        print("  ⚠  No Kubernetes YAML files found.")
         sys.exit(0)
 
     all_findings = []
@@ -350,25 +349,23 @@ def main():
             print(f"  ⚠  {err}")
             continue
 
-        print(f"  ✓  Učitan: {yaml_file}")
+        print(f"  ✓  Loaded: {yaml_file}")
         findings = run_k8s_checks(content)
         all_findings.extend(findings)
 
         score = calculate_score(findings)
-        print(f"  Security Score: {score}/100 — {len(findings)} problema\n")
+        print(f"  Security Score: {score}/100 — {len(findings)} issues\n")
 
         for f in findings:
             icon = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🔵", "LOW": "🟢"}.get(f["severity"], "•")
             print(f"  {icon} [{f['severity']}] {f['id']} — {f['title']}")
 
-        # HTML report po fajlu
         report_name = yaml_file.replace(".yaml", "").replace(".yml", "") + "_report.html"
         html = generate_html_report(findings, score, yaml_file)
         with open(report_name, "w", encoding="utf-8") as rf:
             rf.write(html)
-        print(f"\n  ✅  Report sačuvan: {report_name}\n")
+        print(f"\n  ✅  Report saved: {report_name}\n")
 
-    # JSON summary
     with open("k8s_report.json", "w", encoding="utf-8") as f:
         json.dump({
             "timestamp": datetime.now().isoformat(),
@@ -376,7 +373,7 @@ def main():
             "findings": [{k: v for k, v in f.items() if k not in ("pattern", "check_fn")} for f in all_findings],
         }, f, indent=2, ensure_ascii=False)
 
-    print("  ✅  JSON summary sačuvan: k8s_report.json\n")
+    print("  ✅  JSON summary saved: k8s_report.json\n")
 
     critical_count = sum(1 for f in all_findings if f["severity"] == "CRITICAL")
     sys.exit(1 if critical_count > 0 else 0)

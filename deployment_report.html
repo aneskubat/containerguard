@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bs">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>ContainerGuard K8s Report</title>
@@ -37,7 +37,7 @@
 <div class="header">
   <div class="container" style="padding-top:0;padding-bottom:0">
     <h1>Container<span>Guard</span> — Kubernetes Report</h1>
-    <div class="header-meta">Skeniran fajl: deployment.yaml · Generirano: 02.05.2026 u 09:45</div>
+    <div class="header-meta">Scanned file: deployment.yaml · Generated: 2026-05-03 at 08:53</div>
   </div>
 </div>
 <div class="container">
@@ -47,10 +47,10 @@
       <div class="score-max">/100</div>
     </div>
     <div>
-      <div class="score-label">Kritično</div>
+      <div class="score-label">Critical</div>
       <div class="score-desc">
-        Pronađeno ukupno 9 problema.
-        Kritični problemi zahtijevaju hitnu pažnju.
+        Found 9 issues in total.
+        Critical issues require immediate attention.
       </div>
     </div>
   </div>
@@ -60,16 +60,16 @@
     <div class="sev-card"><div class="count" style="color:#2980B9">3</div><div class="label">MEDIUM</div></div>
     <div class="sev-card"><div class="count" style="color:#27AE60">0</div><div class="label">LOW</div></div>
   </div>
-  <div class="section-title">Kubernetes manifest — nalazi</div>
+  <div class="section-title">Kubernetes manifest — findings</div>
   
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">K8S001</span>
-            <span class="finding-title">Container se pokreće kao root (runAsRoot)</span>
+            <span class="finding-title">Container runs as root (missing runAsNonRoot)</span>
           </div>
-          <div class="finding-desc">Pokretanje kontejnera kao root u Kubernetes okruženju je kritičan propust. U slučaju kompromitacije, napadač dobiva root pristup kontejneru što značajno olakšava container escape napade prema host sistemu.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj securityContext:
+          <div class="finding-desc">Running a container as root in Kubernetes is a critical misconfiguration. If compromised, the attacker gains root access to the container, significantly increasing the risk of a container escape to the host system.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add to securityContext:
   runAsNonRoot: true
   runAsUser: 1000</div>
         </div>
@@ -77,81 +77,82 @@
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">K8S002</span>
-            <span class="finding-title">Privilegovani kontejner (privileged: true)</span>
+            <span class="finding-title">Privileged container (privileged: true)</span>
           </div>
-          <div class="finding-desc">Privilegovani kontejner ima pristup svim Linux capabilities i može direktno pristupati host uređajima. Ekvivalentno pokretanju procesa s root pravima direktno na hostu.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Ukloni 'privileged: true' iz securityContext.</div>
+          <div class="finding-desc">A privileged container has access to all Linux capabilities and can directly access host devices. This is equivalent to running a process with root privileges directly on the host.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Remove 'privileged: true' from securityContext.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#E67E22">HIGH</span>
             <span class="finding-id">K8S003</span>
-            <span class="finding-title">Nedostaju resource limits</span>
+            <span class="finding-title">Missing resource limits</span>
           </div>
-          <div class="finding-desc">Bez definisanih CPU i memorijskih limita, jedan Pod može potrošiti sve resurse noda i srušiti ostale servise — resource exhaustion napad. Kubernetes scheduler također ne može optimalno rasporediti Podove.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj resources:
-  limits:
-    cpu: '500m'
-    memory: '512Mi'
-  requests:
-    cpu: '250m'
-    memory: '256Mi'</div>
+          <div class="finding-desc">Without CPU and memory limits, a single Pod can consume all node resources and bring down other services — known as a resource exhaustion attack. The Kubernetes scheduler also cannot optimally place Pods without this information.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add to container spec:
+  resources:
+    limits:
+      cpu: '500m'
+      memory: '512Mi'
+    requests:
+      cpu: '250m'
+      memory: '256Mi'</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#E67E22">HIGH</span>
             <span class="finding-id">K8S004</span>
-            <span class="finding-title">Koristi se 'latest' tag za container image</span>
+            <span class="finding-title">Latest tag used for container image</span>
           </div>
-          <div class="finding-desc">Tag 'latest' nije deterministički — svaki deployment može pokrenuti drugačiju verziju image-a. Ovo otežava audit, rollback i može uvesti ranjivosti bez znanja operatora.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Koristi specifičan tag, npr. nginx:1.25.3 umjesto nginx:latest</div>
+          <div class="finding-desc">The 'latest' tag is not deterministic — each deployment may run a different image version. This makes auditing difficult, prevents reliable rollbacks, and can silently introduce vulnerabilities.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Use a specific tag, e.g. nginx:1.25.3 instead of nginx:latest</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#E67E22">HIGH</span>
             <span class="finding-id">K8S005</span>
-            <span class="finding-title">allowPrivilegeEscalation nije onemogućen</span>
+            <span class="finding-title">allowPrivilegeEscalation not disabled</span>
           </div>
-          <div class="finding-desc">Bez 'allowPrivilegeEscalation: false', proces unutar kontejnera može steći više privilegija od roditeljskog procesa kroz setuid/setgid mehanizme, što olakšava privilege escalation napade.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj u securityContext:
+          <div class="finding-desc">Without 'allowPrivilegeEscalation: false', a process inside the container can gain more privileges than its parent process through setuid/setgid mechanisms, making privilege escalation attacks easier.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add to securityContext:
   allowPrivilegeEscalation: false</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
             <span class="finding-id">K8S006</span>
-            <span class="finding-title">Nedostaju liveness i readiness probe</span>
+            <span class="finding-title">Missing liveness and readiness probes</span>
           </div>
-          <div class="finding-desc">Bez health proba, Kubernetes ne može automatski detektovati i restartati nezdrave kontejnere. Aplikacija može biti u neispravnom stanju ali Kubernetes nastavlja slati saobraćaj na nju.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj livenessProbe i readinessProbe u container spec.</div>
+          <div class="finding-desc">Without health probes, Kubernetes cannot automatically detect and restart unhealthy containers. The application may be in a broken state while Kubernetes continues routing traffic to it.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add livenessProbe and readinessProbe to the container spec.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
             <span class="finding-id">K8S007</span>
-            <span class="finding-title">Root filesystem nije read-only</span>
+            <span class="finding-title">Root filesystem is not read-only</span>
           </div>
-          <div class="finding-desc">Bez readOnlyRootFilesystem: true, napadač koji kompromituje kontejner može pisati na filesystem — instalirati alate, modifikovati konfiguracije ili persistovati malware.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj u securityContext:
+          <div class="finding-desc">Without readOnlyRootFilesystem: true, an attacker who compromises the container can write to the filesystem — installing tools, modifying configurations, or persisting malware across restarts.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add to securityContext:
   readOnlyRootFilesystem: true</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
             <span class="finding-id">K8S008</span>
-            <span class="finding-title">Hostnetwork ili hostPID je omogućen</span>
+            <span class="finding-title">hostNetwork or hostPID enabled</span>
           </div>
-          <div class="finding-desc">hostNetwork: true ili hostPID: true uklanjaju mrežnu/procesnu izolaciju između kontejnera i hosta. Napadač može vidjeti sve mrežne interfejse i procese na host sistemu.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Ukloni 'hostNetwork: true' i 'hostPID: true' iz Pod spec-a.</div>
+          <div class="finding-desc">hostNetwork: true or hostPID: true removes network/process isolation between the container and the host. An attacker can see all network interfaces and processes running on the host system.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Remove 'hostNetwork: true' and 'hostPID: true' from the Pod spec.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">K8S010</span>
-            <span class="finding-title">Secrets u environment varijablama (plaintext)</span>
+            <span class="finding-title">Secrets in plaintext environment variables</span>
           </div>
-          <div class="finding-desc">Definisanje tajnih podataka direktno u env varijablama Pod-a znači da su vidljivi svakome s pristupom kubectl describe. Kubernetes Secrets objekat pruža bolju kontrolu pristupa.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Koristi secretKeyRef umjesto direktnih vrijednosti:
+          <div class="finding-desc">Defining secrets directly as env var values means they are visible to anyone with kubectl describe access. Kubernetes Secret objects provide better access control and can be encrypted at rest.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Use secretKeyRef instead of plain values:
   env:
     - name: DB_PASSWORD
       valueFrom:

@@ -1,36 +1,36 @@
-# HARDENED verzija Dockerfile-a
-# Sve sigurnosne provjere su ispravne - ContainerGuard score: 100/100
+# HARDENED Dockerfile
+# All security checks pass - ContainerGuard score: 100/100
 
-# DF002 - FIXED: Specifična verzija umjesto 'latest'
+# DF002 - FIXED: Specific version instead of 'latest'
 FROM python:3.11.9-slim
 
-# DF003 - FIXED: Nema hardcoded tajni - koriste se runtime env varijable
-# API_KEY i DB_PASSWORD se proslijeđuju pri pokretanju kontejnera:
+# DF003 - FIXED: No hardcoded secrets - passed at runtime via environment variables
+# API_KEY and DB_PASSWORD are passed when running the container:
 # docker run -e API_KEY=... -e DB_PASSWORD=... myapp
 
 WORKDIR /app
 
-# DF006 - FIXED: --no-install-recommends smanjuje attack surface
+# DF006 - FIXED: --no-install-recommends reduces attack surface
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# DF004 - FIXED: COPY umjesto ADD
+# DF004 - FIXED: COPY instead of ADD
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# DF001 - FIXED: Kreiramo i koristimo non-root korisnika
+# DF001 - FIXED: Create and use a non-root user
 RUN addgroup --system appgroup && \
     adduser --system --ingroup appgroup appuser
 USER appuser
 
-# DF007 - FIXED: Port iznad 1024, ne treba root
+# DF007 - FIXED: Port above 1024, no root required
 EXPOSE 8080
 
-# DF005 - FIXED: Healthcheck definisan
+# DF005 - FIXED: Healthcheck defined
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 

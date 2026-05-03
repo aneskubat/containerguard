@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="bs">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ContainerGuard Report</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,6 +24,7 @@
   .sev-card .label { font-size: 0.75rem; color: #888; margin-top: 4px; }
   .section-title { font-size: 1rem; font-weight: 600; color: #fff; margin: 1.5rem 0 0.75rem; padding-bottom: 8px; border-bottom: 1px solid #2A2D3E; }
   .finding { background: #1A1D2E; border: 1px solid #2A2D3E; border-radius: 10px; padding: 1.2rem; margin-bottom: 10px; }
+  .finding:hover { border-color: #3A3D5E; }
   .finding-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
   .sev-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; color: #fff; }
   .finding-id { font-size: 0.75rem; color: #666; font-family: monospace; }
@@ -38,7 +40,7 @@
 <div class="header">
   <div class="container" style="padding-top:0;padding-bottom:0">
     <h1>Container<span>Guard</span> Security Report</h1>
-    <div class="header-meta">Skenirani fajlovi: Dockerfile, docker-compose.yml · Generirano: 01.05.2026 u 23:19</div>
+    <div class="header-meta">Scanned files: Dockerfile, docker-compose.yml · Generated: 2026-05-03 at 08:53</div>
   </div>
 </div>
 <div class="container">
@@ -48,10 +50,10 @@
       <div class="score-max">/100</div>
     </div>
     <div>
-      <div class="score-label">Kritično</div>
+      <div class="score-label">Critical</div>
       <div class="score-desc">
-        Pronađeno ukupno 10 problema.
-        Kritični problemi zahtijevaju hitnu pažnju.
+        Found 10 issues in total.
+        Critical issues require immediate attention.
       </div>
     </div>
   </div>
@@ -61,116 +63,114 @@
     <div class="sev-card"><div class="count" style="color:#2980B9">3</div><div class="label">MEDIUM</div></div>
     <div class="sev-card"><div class="count" style="color:#27AE60">2</div><div class="label">LOW</div></div>
   </div>
-  <div class="section-title">Dockerfile — nalazi</div>
+  <div class="section-title">Dockerfile — findings</div>
   
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">DF001</span>
-            <span class="finding-title">Kontejner se pokreće kao root korisnik</span>
+            <span class="finding-title">Container runs as root user</span>
           </div>
           <div class="finding-meta">Dockerfile</div>
-          <div class="finding-desc">Pokretanje kontejnera kao root je ozbiljan sigurnosni propust. Ako napadač kompromituje aplikaciju, automatski ima root pristup kontejneru, što olakšava container escape napade.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj 'USER appuser' na kraj Dockerfile-a (prethodno kreiraj korisnika s RUN adduser).</div>
+          <div class="finding-desc">Running a container as root is a serious security misconfiguration. If an attacker compromises the application, they automatically gain root access to the container, making container escape attacks much easier.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add 'USER appuser' at the end of your Dockerfile (create the user first with RUN adduser).</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#E67E22">HIGH</span>
             <span class="finding-id">DF002</span>
-            <span class="finding-title">Koristi se 'latest' tag za base image</span>
+            <span class="finding-title">Latest tag used for base image</span>
           </div>
-          <div class="finding-meta">Dockerfile · Linija 5</div>
-          <div class="finding-desc">Tag 'latest' nije fiksna verzija — mijenja se. Danas je sigurna slika, sutra može sadržavati ranjivosti. Nemoguće je reproducirati isti build.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Koristi specifičan tag, npr. FROM python:3.11.9-slim umjesto FROM python:latest</div>
+          <div class="finding-meta">Dockerfile · Line 5</div>
+          <div class="finding-desc">The 'latest' tag is not a fixed version — it changes over time. An image that is secure today may contain vulnerabilities tomorrow. It also makes builds impossible to reproduce consistently.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Use a specific tag, e.g. FROM python:3.11.9-slim instead of FROM python:latest</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">DF003</span>
-            <span class="finding-title">Hardcoded lozinka ili API ključ u ENV</span>
+            <span class="finding-title">Hardcoded password or API key in ENV</span>
           </div>
-          <div class="finding-meta">Dockerfile · Linija 8</div>
-          <div class="finding-desc">Tajni podaci hardcoded u Dockerfile postaju dio Docker image sloja. Svako ko skine image može ih pročitati komandom 'docker history'.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Koristi Docker Secrets ili environment varijable koje se proslijeđuju pri pokretanju.</div>
+          <div class="finding-meta">Dockerfile · Line 8</div>
+          <div class="finding-desc">Secrets hardcoded in a Dockerfile become part of the Docker image layer. Anyone who pulls the image can read them using 'docker history' or by inspecting the image layers directly.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Use Docker Secrets or pass environment variables at runtime. Never hardcode secrets in a Dockerfile.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
             <span class="finding-id">DF004</span>
-            <span class="finding-title">Koristi se ADD umjesto COPY</span>
+            <span class="finding-title">ADD used instead of COPY</span>
           </div>
-          <div class="finding-meta">Dockerfile · Linija 12</div>
-          <div class="finding-desc">ADD instrukcija ima skrivene mogućnosti: automatski raspakuje arhive i može preuzimati fajlove s URL-ova. COPY je eksplicitniji i sigurniji.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Zamijeni ADD s COPY za kopiranje lokalnih fajlova.</div>
+          <div class="finding-meta">Dockerfile · Line 12</div>
+          <div class="finding-desc">The ADD instruction has hidden behaviour: it automatically extracts archives and can fetch files from URLs. This can lead to unexpected results and potential security issues. COPY is more explicit and safer.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Replace ADD with COPY for copying local files. Only use ADD if you specifically need archive extraction.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
             <span class="finding-id">DF005</span>
-            <span class="finding-title">Nedostaje HEALTHCHECK instrukcija</span>
+            <span class="finding-title">Missing HEALTHCHECK instruction</span>
           </div>
           <div class="finding-meta">Dockerfile</div>
-          <div class="finding-desc">Bez HEALTHCHECK instrukcije, Docker ne zna je li aplikacija funkcionalna. Kontejner može biti 'running' ali aplikacija može biti crashala.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj HEALTHCHECK instrukciju, npr: HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health || exit 1</div>
+          <div class="finding-desc">Without a HEALTHCHECK instruction, Docker cannot determine whether the application inside the container is actually healthy. A container may show as 'running' while the application has crashed.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add a HEALTHCHECK instruction, e.g: HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health || exit 1</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#27AE60">LOW</span>
             <span class="finding-id">DF006</span>
-            <span class="finding-title">apt-get bez --no-install-recommends</span>
+            <span class="finding-title">apt-get without --no-install-recommends</span>
           </div>
-          <div class="finding-meta">Dockerfile · Linija 17</div>
-          <div class="finding-desc">Instaliranje paketa bez --no-install-recommends dovodi do instalacije nepotrebnih paketa koji povećavaju površinu napada.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Koristi: RUN apt-get install -y --no-install-recommends <paketi></div>
+          <div class="finding-meta">Dockerfile · Line 17</div>
+          <div class="finding-desc">Installing packages without --no-install-recommends pulls in unnecessary packages that increase the attack surface. More packages means more potential vulnerabilities.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Use: RUN apt-get install -y --no-install-recommends <packages></div>
         </div>
-  <div class="section-title">docker-compose.yml — nalazi</div>
+  <div class="section-title">docker-compose.yml — findings</div>
   
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">DC001</span>
-            <span class="finding-title">Privileged mod je uključen</span>
+            <span class="finding-title">Privileged mode enabled</span>
           </div>
           <div class="finding-meta">docker-compose.yml</div>
-          <div class="finding-desc">privileged: true daje kontejneru gotovo isti pristup hostu kao root korisnik. Napadač može lako izvesti container escape napad.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Ukloni 'privileged: true'. Koristi 'cap_add' samo za specifične capabilities.</div>
+          <div class="finding-desc">privileged: true gives the container nearly the same access to the host as a root user. An attacker who compromises such a container can easily perform a container escape attack and take control of the host machine.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Remove 'privileged: true'. If specific capabilities are needed, use 'cap_add' for only those Linux capabilities required.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#C0392B">CRITICAL</span>
             <span class="finding-id">DC002</span>
-            <span class="finding-title">Docker socket je montiran u kontejner</span>
+            <span class="finding-title">Docker socket mounted into container</span>
           </div>
           <div class="finding-meta">docker-compose.yml</div>
-          <div class="finding-desc">Montiranje /var/run/docker.sock daje kontejneru punu kontrolu nad Docker daemonom. Napadač može kreirati privilegovane kontejnere i preuzeti cijeli host.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Nikad ne montiraj Docker socket u produkcijske kontejnere.</div>
+          <div class="finding-desc">Mounting /var/run/docker.sock gives the container full control over the Docker daemon. An attacker inside the container can create new privileged containers, mount the host filesystem, and effectively take over the entire host.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Never mount the Docker socket into production containers. If Docker-in-Docker is needed, use alternatives like Kaniko.</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#2980B9">MEDIUM</span>
             <span class="finding-id">DC004</span>
-            <span class="finding-title">Nedostaju resource limits (CPU/memorija)</span>
+            <span class="finding-title">Missing resource limits (CPU/memory)</span>
           </div>
           <div class="finding-meta">docker-compose.yml</div>
-          <div class="finding-desc">Bez resource limits, jedan kontejner može potrošiti sve resurse hosta i srušiti ostale servise.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj limits:
-  deploy:
-    resources:
-      limits:
-        cpus: '0.5'
-        memory: 512M</div>
+          <div class="finding-desc">Without resource limits, a single container can consume all host resources and bring down other services — known as a resource exhaustion or noisy neighbor problem.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add limits under deploy.resources:
+  limits:
+    cpus: '0.5'
+    memory: 512M</div>
         </div>
         <div class="finding">
           <div class="finding-header">
             <span class="sev-badge" style="background:#27AE60">LOW</span>
             <span class="finding-id">DC005</span>
-            <span class="finding-title">Container restart policy nije definisan</span>
+            <span class="finding-title">Restart policy not defined</span>
           </div>
           <div class="finding-meta">docker-compose.yml</div>
-          <div class="finding-desc">Bez restart policy, kontejner se ne pokreće automatski nakon pada sistema.</div>
-          <div class="finding-fix"><strong>Rješenje:</strong> Dodaj 'restart: unless-stopped' za produkcijske servise.</div>
+          <div class="finding-desc">Without a restart policy, containers will not automatically restart after a crash or system reboot. This is not a direct security issue but affects service availability.</div>
+          <div class="finding-fix"><strong>Fix:</strong> Add 'restart: unless-stopped' or 'restart: always' for production services.</div>
         </div>
 </div>
-<div class="footer">ContainerGuard · Sigurnosni skener kontejnerskih aplikacija</div>
+<div class="footer">ContainerGuard · Docker & Kubernetes Security Scanner</div>
 </body>
 </html>

@@ -1,85 +1,85 @@
 {
   "score": 0,
-  "timestamp": "2026-05-01T23:19:00.495581",
+  "timestamp": "2026-05-03T08:53:50.777280",
   "findings": [
     {
       "id": "DF001",
       "severity": "CRITICAL",
-      "title": "Kontejner se pokreće kao root korisnik",
-      "description": "Pokretanje kontejnera kao root je ozbiljan sigurnosni propust. Ako napadač kompromituje aplikaciju, automatski ima root pristup kontejneru, što olakšava container escape napade.",
-      "fix": "Dodaj 'USER appuser' na kraj Dockerfile-a (prethodno kreiraj korisnika s RUN adduser).",
+      "title": "Container runs as root user",
+      "description": "Running a container as root is a serious security misconfiguration. If an attacker compromises the application, they automatically gain root access to the container, making container escape attacks much easier.",
+      "fix": "Add 'USER appuser' at the end of your Dockerfile (create the user first with RUN adduser).",
       "line": null
     },
     {
       "id": "DF002",
       "severity": "HIGH",
-      "title": "Koristi se 'latest' tag za base image",
-      "description": "Tag 'latest' nije fiksna verzija — mijenja se. Danas je sigurna slika, sutra može sadržavati ranjivosti. Nemoguće je reproducirati isti build.",
-      "fix": "Koristi specifičan tag, npr. FROM python:3.11.9-slim umjesto FROM python:latest",
+      "title": "Latest tag used for base image",
+      "description": "The 'latest' tag is not a fixed version — it changes over time. An image that is secure today may contain vulnerabilities tomorrow. It also makes builds impossible to reproduce consistently.",
+      "fix": "Use a specific tag, e.g. FROM python:3.11.9-slim instead of FROM python:latest",
       "line": 5
     },
     {
       "id": "DF003",
       "severity": "CRITICAL",
-      "title": "Hardcoded lozinka ili API ključ u ENV",
-      "description": "Tajni podaci hardcoded u Dockerfile postaju dio Docker image sloja. Svako ko skine image može ih pročitati komandom 'docker history'.",
-      "fix": "Koristi Docker Secrets ili environment varijable koje se proslijeđuju pri pokretanju.",
+      "title": "Hardcoded password or API key in ENV",
+      "description": "Secrets hardcoded in a Dockerfile become part of the Docker image layer. Anyone who pulls the image can read them using 'docker history' or by inspecting the image layers directly.",
+      "fix": "Use Docker Secrets or pass environment variables at runtime. Never hardcode secrets in a Dockerfile.",
       "line": 8
     },
     {
       "id": "DF004",
       "severity": "MEDIUM",
-      "title": "Koristi se ADD umjesto COPY",
-      "description": "ADD instrukcija ima skrivene mogućnosti: automatski raspakuje arhive i može preuzimati fajlove s URL-ova. COPY je eksplicitniji i sigurniji.",
-      "fix": "Zamijeni ADD s COPY za kopiranje lokalnih fajlova.",
+      "title": "ADD used instead of COPY",
+      "description": "The ADD instruction has hidden behaviour: it automatically extracts archives and can fetch files from URLs. This can lead to unexpected results and potential security issues. COPY is more explicit and safer.",
+      "fix": "Replace ADD with COPY for copying local files. Only use ADD if you specifically need archive extraction.",
       "line": 12
     },
     {
       "id": "DF005",
       "severity": "MEDIUM",
-      "title": "Nedostaje HEALTHCHECK instrukcija",
-      "description": "Bez HEALTHCHECK instrukcije, Docker ne zna je li aplikacija funkcionalna. Kontejner može biti 'running' ali aplikacija može biti crashala.",
-      "fix": "Dodaj HEALTHCHECK instrukciju, npr: HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health || exit 1",
+      "title": "Missing HEALTHCHECK instruction",
+      "description": "Without a HEALTHCHECK instruction, Docker cannot determine whether the application inside the container is actually healthy. A container may show as 'running' while the application has crashed.",
+      "fix": "Add a HEALTHCHECK instruction, e.g: HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health || exit 1",
       "line": null
     },
     {
       "id": "DF006",
       "severity": "LOW",
-      "title": "apt-get bez --no-install-recommends",
-      "description": "Instaliranje paketa bez --no-install-recommends dovodi do instalacije nepotrebnih paketa koji povećavaju površinu napada.",
-      "fix": "Koristi: RUN apt-get install -y --no-install-recommends <paketi>",
+      "title": "apt-get without --no-install-recommends",
+      "description": "Installing packages without --no-install-recommends pulls in unnecessary packages that increase the attack surface. More packages means more potential vulnerabilities.",
+      "fix": "Use: RUN apt-get install -y --no-install-recommends <packages>",
       "line": 17
     },
     {
       "id": "DC001",
       "severity": "CRITICAL",
-      "title": "Privileged mod je uključen",
-      "description": "privileged: true daje kontejneru gotovo isti pristup hostu kao root korisnik. Napadač može lako izvesti container escape napad.",
-      "fix": "Ukloni 'privileged: true'. Koristi 'cap_add' samo za specifične capabilities.",
+      "title": "Privileged mode enabled",
+      "description": "privileged: true gives the container nearly the same access to the host as a root user. An attacker who compromises such a container can easily perform a container escape attack and take control of the host machine.",
+      "fix": "Remove 'privileged: true'. If specific capabilities are needed, use 'cap_add' for only those Linux capabilities required.",
       "line": null
     },
     {
       "id": "DC002",
       "severity": "CRITICAL",
-      "title": "Docker socket je montiran u kontejner",
-      "description": "Montiranje /var/run/docker.sock daje kontejneru punu kontrolu nad Docker daemonom. Napadač može kreirati privilegovane kontejnere i preuzeti cijeli host.",
-      "fix": "Nikad ne montiraj Docker socket u produkcijske kontejnere.",
+      "title": "Docker socket mounted into container",
+      "description": "Mounting /var/run/docker.sock gives the container full control over the Docker daemon. An attacker inside the container can create new privileged containers, mount the host filesystem, and effectively take over the entire host.",
+      "fix": "Never mount the Docker socket into production containers. If Docker-in-Docker is needed, use alternatives like Kaniko.",
       "line": null
     },
     {
       "id": "DC004",
       "severity": "MEDIUM",
-      "title": "Nedostaju resource limits (CPU/memorija)",
-      "description": "Bez resource limits, jedan kontejner može potrošiti sve resurse hosta i srušiti ostale servise.",
-      "fix": "Dodaj limits:\n  deploy:\n    resources:\n      limits:\n        cpus: '0.5'\n        memory: 512M",
+      "title": "Missing resource limits (CPU/memory)",
+      "description": "Without resource limits, a single container can consume all host resources and bring down other services — known as a resource exhaustion or noisy neighbor problem.",
+      "fix": "Add limits under deploy.resources:\n  limits:\n    cpus: '0.5'\n    memory: 512M",
       "line": null
     },
     {
       "id": "DC005",
       "severity": "LOW",
-      "title": "Container restart policy nije definisan",
-      "description": "Bez restart policy, kontejner se ne pokreće automatski nakon pada sistema.",
-      "fix": "Dodaj 'restart: unless-stopped' za produkcijske servise.",
+      "title": "Restart policy not defined",
+      "description": "Without a restart policy, containers will not automatically restart after a crash or system reboot. This is not a direct security issue but affects service availability.",
+      "fix": "Add 'restart: unless-stopped' or 'restart: always' for production services.",
       "line": null
     }
   ]

@@ -11,22 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Preuzmi kod
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Postavi Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Pokreni ContainerGuard skener
+      - name: Run Docker security scan
         run: python3 scanner.py
 
-      - name: Sačuvaj HTML report
+      - name: Run Kubernetes security scan
+        run: python3 k8s_scanner.py
+
+      - name: Save reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: containerguard-report
+          name: containerguard-reports
           path: |
             containerguard_report.html
             containerguard_report.json
+            deployment_report.html
+            k8s_report.json

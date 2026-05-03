@@ -1,4 +1,4 @@
-# ⚠️  OVO JE NAMJERNO RANJIVA KONFIGURACIJA - SAMO ZA TESTIRANJE!
+# ⚠️  THIS IS AN INTENTIONALLY VULNERABLE CONFIGURATION - FOR TESTING ONLY!
 
 version: '3.8'
 
@@ -7,17 +7,17 @@ services:
     build: .
     ports:
       - "80:80"
-    # DC003 - Hardcoded lozinka!
+    # DC003 - Hardcoded password!
     environment:
       - DB_PASSWORD=admin1234
-      - SECRET_KEY=moja_tajna_lozinka
+      - SECRET_KEY=my_secret_password
     # DC001 - Privileged mode!
     privileged: true
     volumes:
-      # DC002 - Docker socket montiran u kontejner!
+      # DC002 - Docker socket mounted into container!
       - /var/run/docker.sock:/var/run/docker.sock
-    # DC004 - Nema resource limits!
-    # DC005 - Nema restart policy!
+    # DC004 - No resource limits!
+    # DC005 - No restart policy!
 
   db:
     image: postgres:latest
