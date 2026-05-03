@@ -129,7 +129,7 @@ COMPOSE_CHECKS = [
             "perform a container escape attack and take control of the host machine."
         ),
         "fix": "Remove 'privileged: true'. If specific capabilities are needed, use 'cap_add' for only those Linux capabilities required.",
-        "pattern": re.compile(r"privileged\s*:\s*true", re.IGNORECASE),
+        "pattern": re.compile(r"^\s*privileged\s*:\s*true", re.IGNORECASE | re.MULTILINE),
         "check_fn": "pattern",
     },
     {
